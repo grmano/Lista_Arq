@@ -1,0 +1,216 @@
+;---------------------------------------------------
+; Programa:Operações 16 bis
+; Autor:Lucas Germano da Silva
+; Data: 08/09/2017
+;---------------------------------------------------
+
+ORG 100
+
+TEST1: DW 1090H
+TEST2: DW 1080H
+RES:   DW 0H
+TEST1_PTR: DW TEST1
+TEST2_PTR: DW TEST2
+RES_PTR:   DW RES
+TEMP: DW 0
+TEMP_PTR: DW TEMP
+
+
+ORG 0
+
+INICIO:
+   LDA #00
+   PUSH
+   LDA TEST1_PTR
+   PUSH
+   LDA #00
+   PUSH
+   LDA TEST2_PTR
+   PUSH
+   LDA #00
+   PUSH
+   LDA RES_PTR
+   PUSH
+   LDA #0
+   JSR OP16BITS
+   LDA #1
+   JSR OP16BITS
+   LDA #2
+   JSR OP16BITS
+   LDA #3 
+   JSR OP16BITS
+   HLT
+  
+
+
+ORG 400
+
+SP: DW 0
+FLAG: DB 0
+PTR1: DW 0
+PTR1_2: DW 0
+PTR2: Dw 0
+PTR2_2: DW 0
+PTR_RES: DW 0
+PTR_RES_2: DW 0
+
+OP16BITS:
+   STA FLAG
+   STS SP
+   POP
+   POP ;Descarta as 2 pos do stack
+   POP 
+   ;Pegar ponteiros
+   STA PTR_RES
+   ADD #1
+   STA PTR_RES_2
+   POP
+   STA PTR_RES + 1
+   STA PTR_RES_2 + 1
+
+   POP
+   STA PTR2
+   ADD #1
+   STA PTR2_2
+   POP
+   STA PTR2 + 1
+   STA PTR2_2 + 1
+
+   POP
+   STA PTR1
+   ADD #1
+   STA PTR1_2
+   POP
+   STA PTR1 + 1
+   STA PTR1_2 + 1
+
+   LDA #0
+   SUB FLAG
+   JZ  SOMA 
+   LDA #1
+   SUB FLAG
+   JZ  SUB
+   LDA #2
+   SUB FLAG
+   JZ  MAIOR
+   LDA #3
+   SUB FLAG
+   JZ  MENOR
+
+   LDS SP
+   RET
+
+;MENOR 16 BITS
+MENOR:
+   LDA @PTR1_2
+   SUB @PTR2_2
+   JZ IGUAL_MENOR
+   JP OSEGUNDO
+   JMP OPRIMEIRO
+
+;MAIOR 16 BITS
+MAIOR:
+   ;Primeiro maior bits
+ 
+   LDA @PTR1_2
+   SUB @PTR2_2
+   JZ IGUAL
+   JP OPRIMEIRO
+   JMP OSEGUNDO
+    
+
+OPRIMEIRO:
+;SE O PRIMEIRO FOR MAIOR
+   LDA @PTR1
+   STA @PTR_RES
+   LDA @PTR1_2
+   STA @PTR_RES_2
+   LDS SP
+   LDA #0
+   RET
+
+OSEGUNDO: 
+   LDA @PTR2
+   STA @PTR_RES
+   LDA @PTR2_2
+   STA @PTR_RES_2
+   LDS SP
+   LDA #0
+   RET
+
+IGUAL:
+   LDA @PTR1
+   SUB @PTR2
+   JZ IGUAL_MESMO
+   JP OPRIMEIRO
+   JMP OSEGUNDO
+
+IGUAL_MENOR:
+   LDA @PTR1
+   SUB @PTR2
+   JZ IGUAL_MESMO
+   JP OSEGUNDO
+   JMP OPRIMEIRO
+
+IGUAL_MESMO:
+   LDA @PTR1
+   STA @PTR_RES
+   LDA @PTR1_2
+   STA @PTR_RES_2
+   LDS SP
+   LDA #1
+   RET
+
+
+
+;SOMA 16 BITS
+SOMA:
+   LDA @PTR1
+   ADD @PTR2
+   STA @PTR_RES
+   JC CARRY
+
+   LDA @PTR1_2
+   ADD @PTR2_2
+   STA @PTR_RES_2
+   JC  FIM_CARRY
+   JMP FIM_SOMA
+ 
+
+CARRY:
+   LDA #1
+   ADD @PTR1_2
+   ADD @PTR2_2
+   STA @PTR_RES_2
+   JC FIM_CARRY
+   LDA #0
+FIM_SOMA:
+   LDS SP
+   RET
+FIM_CARRY:
+   LDA #1
+   JMP FIM_SOMA
+
+;SUB 16 BITS
+SUB:
+   LDA @PTR1
+   SUB @PTR2
+   STA @PTR_RES
+   JC CARRY_SUB
+
+   LDA @PTR1_2
+   SUB @PTR2_2
+   STA @PTR_RES_2
+   JC FIM_CARRY
+   JMP FIM_SOMA
+
+CARRY_SUB:
+   LDA @PTR1_2
+   SUB #1
+   SUB @PTR2_2
+   STA @PTR_RES_2
+   JC FIM_CARRY
+   LDA #0
+   JMP FIM_SOMA
+   
+   
