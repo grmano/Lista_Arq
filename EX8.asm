@@ -1,0 +1,110 @@
+;---------------------------------------------------
+; Programa:
+; Autor:
+; Data:
+;---------------------------------------------------
+;PROGRAMA CALCULA RECUSIVAMENTE FIB ATE O FIB(13) = 233(CABE EM 8 BITS)
+;OUTPUT NO BANNER EM HEXA, SO IMPRIME CERTO SE NAO TIVER LETRAS 
+;OU SEJA IMPRIME ERRADO( FIB(7) = 13(0xD), FIB(13) = 233(0xE9)
+ORG 200
+VAL: DB 3
+NUM: DB 0
+DIG: DB 0
+TARGET: DB 10
+TEMP: DB 1
+TEMP_2: DB 1
+
+ORG 0
+INICIO:
+   IN 3
+   SUB #1
+   JZ DIGITO
+   JMP INICIO
+ 
+
+DIGITO:
+   IN 2
+   SUB #35 
+   JZ CALCULO ;SE FOR # VAI PARA CALCULO
+   SUB #13 ; PARA CHEGAR AOS NUMEROS
+   STA DIG
+   LDA NUM
+   JSR MULT_10
+   ADD DIG
+   STA NUM
+   JMP INICIO
+   
+    
+
+
+CALCULO:
+   LDA #12
+   JSR FIB
+; TUDO AQUI EM BAIXO E PARA IMPRIMIR
+   STA TARGET
+   SHR
+   SHR
+   SHR
+   SHR
+   ADD #48
+   OUT 3
+   OUT 2
+   LDA TARGET
+   SHL
+   SHL
+   SHL
+   SHL
+   SHR
+   SHR
+   SHR
+   SHR
+   ADD #48
+   OUT 2
+   HLT
+
+ORG 1000
+SP_2: DW 0
+TEMP_NUM: DB 0
+
+
+FIB:
+   SUB #0
+   JZ EHZERO
+   SUB #1
+   JZ EHUM
+
+   PUSH
+   JSR FIB
+   STA TEMP
+   POP 
+   STA TEMP_2
+   LDA TEMP
+   PUSH
+
+   LDA TEMP_2
+   SUB #1
+   JSR FIB
+   STA TEMP
+   POP
+   ADD TEMP
+   RET
+
+EHZERO:
+   LDA #0
+   RET
+
+EHUM:
+   LDA #1
+   RET
+
+MULT_10:
+   STS SP_2
+   STA TEMP_NUM
+   SHL
+   SHL
+   SHL
+   ADD TEMP_NUM
+   ADD TEMP_NUM
+   LDS SP_2
+   RET
+

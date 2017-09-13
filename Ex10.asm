@@ -1,0 +1,136 @@
+;---------------------------------------------------
+; Programa:
+; Autor:
+; Data:
+;---------------------------------------------------
+
+ORG 512
+
+CONT: DB 0 ;Contagem do visor
+T_ESPERA: DW 1000; 1 seg em milisegundos
+PTR_T: DW T_ESPERA
+ACERTOS: DB 0
+PTR_T_2: DW 0
+PERCENT: DB 100 ;10% aproximado hehehehe
+DELTA_PERCENT: DB 8; Quanto diminuo de percent
+T_ESPERA_HIGH: DB 03H
+T_ESPERA_LOW: DB 232
+TOM: DW 2020
+DURACAO: DW 500
+PTR_TOM: DW TOM
+
+ORG 0
+
+INICIO:
+   LDA PTR_T
+   ADD #1
+   STA PTR_T_2
+   LDA #02H
+   STA PTR_T_2 + 1
+   ;INICIALIZACAO 
+   LDA CONT  
+   OUT 0 
+   LDA #5
+   TRAP T_ESPERA
+   IN  1
+   AND #1
+   JNZ TESTE_ACERTO
+   LDA CONT
+   SUB #9
+   JZ NOVE
+   JSR INC_CONT
+   LDA CONT
+   JMP INICIO
+   
+NOVE:
+   LDA #0
+   STA CONT
+   JMP INICIO
+
+TESTE_ACERTO:
+   IN 0
+   SUB #0
+   JZ REINICIAR
+   LDA CONT
+   SUB #5
+   JZ ACERTO
+   JMP ERRO
+
+REINICIAR:
+   LDA #0
+   STA CONT
+   STA ACERTOS
+   LDA T_ESPERA_HIGH
+   STA @PTR_T_2
+   LDA T_ESPERA_LOW
+   STA @PTR_T
+   LDA #100
+   STA PERCENT
+   LDA #8
+   STA DELTA_PERCEnT
+   JMP INICIO
+
+ACERTO:
+   JSR INC_ACERTOS
+   JMP SUB_16
+RETORNO_SUB:
+   LDA PERCENT
+   SUB DELTA_PERCENT
+   STA PERCENT
+   LDA #0
+   STA CONT
+   JMP INICIO
+
+ERRO:
+   LDA ACERTOS
+   OUT 0
+   LDA #6
+   TRAP PTR_T
+   HLT
+
+;SUB 16 BITS
+SUB_16:
+   LDA @PTR_T
+   SUB PERCENT
+   STA @PTR_T
+   JC CARRY_SUB
+   JMP FIM_SUB
+CARRY_SUB:
+   LDA @PTR_T_2
+   SUB #1
+   STA @PTR_T_2
+FIM_SUB:
+   JMP RETORNO_SUB
+
+
+ORG 1000
+  
+SP:  DW 0; Guarda o valor do stack pointer 
+SPINC: DW 0;
+
+
+INC_CONT:
+  STS SPINC
+  LDS #64808
+  PUSH ;salva acc
+  LDA CONT
+  ADD #1
+  STA CONT
+  POP
+
+  LDS SPINC
+  RET  
+
+INC_ACERTOS:
+  STS SPINC
+  LDS #64808
+  PUSH ;
+  LDA ACERTOS
+  ADD #1
+  STA ACERTOS
+  POP
+  LDS SPINC
+  RET 
+
+
+
